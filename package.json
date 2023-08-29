@@ -1,0 +1,19 @@
+{
+  "name": "nelson-short-links-service",
+  "version": "1.0.0",
+  "description": "Nelson short links service. Ref: https://projectnelson.atlassian.net/wiki/spaces/NELS/pages/2293202949/MS7+-+Short+Links+Service",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ABRGI/nelson-short-links-service.git"
+  },
+  "author": "Sandeep Baynes",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/ABRGI/nelson-short-links-service/issues"
+  },
+  "homepage": "https://github.com/ABRGI/nelson-short-links-service#readme"
+}
