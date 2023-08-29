@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/ABRGI/nelson-short-links-service/issues"
   },
-  "homepage": "https://github.com/ABRGI/nelson-short-links-service#readme"
+  "homepage": "https://github.com/ABRGI/nelson-short-links-service#readme",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.398.0",
+    "@aws-sdk/util-dynamodb": "^3.398.0",
+    "short-unique-id": "^4.4.4"
+  }
 }
