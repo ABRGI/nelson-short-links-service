@@ -17,27 +17,14 @@ npm install
 </code>
 
 ### Run commands
-#### To generate a new short link, run command 
+#### Link manager
+The scripts run on an express server for testing or standalone machine deployment<br>
+Update the environment variables in package.json file before running the below command
 <code>
-npm run generatelink
+npm run manager
 </code>
 
-#### To delete an existing link, run command
-<code>
-npm run deletelink
-</code>
-
-#### To update an existing link, run command
-<code>
-npm run updatelink
-</code>
-
-#### To get an existing link info, run command
-<code>
-npm run getlink
-</code>
-
-#### To test link redirection, run command
+#### Link redirection
 <ul>
 <li>Make sure that the TenantLinks table is updated with all the required alias for the tenant</li>
 <li>Update the hosts file to point all the test domans to 0.0.0.0 or 127.0.0.1 (localhost)</li>
@@ -45,16 +32,16 @@ npm run getlink
 <code>
 npm run startredirectsvc --host=XXXXX [--port=80]
 </code>
-<br>Replace host and port with the test domain. The optional port is 80 by default to support http requests. The service doesn't support HTTPS requests for local testing yet.
+<br>Replace host and port with the test domain and ports. The optional port is 80 by default to support http requests. The service doesn't support HTTPS requests for local testing yet.
+<br>To test multiple hosts, start multiple instances of the service with different host values
 </li>
 </li>Open the test link using a browser. The service should redirect you the expected destination or respond with error 404 
 </ul>
-
-<b>Note:</b> The index.js script contains endpoints to test or debug the link manager as well instead of calling the service through commandline. Start this by running command
+Start service by running command
 <code>
-npm run local<br>
+npm run redirectsvc<br>
 </code>
-Remember that this does't include the redirect service.
+Remember that this does't include the manager debug.
 
 Update the environment variables in package.json for the local script if any changes are required
 
