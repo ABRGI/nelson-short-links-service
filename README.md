@@ -32,7 +32,7 @@ Update the environment variables in package.json file before running the below c
 </li>Open the test link using a browser. The service should redirect you the expected destination or respond with error 404 
 </ul>
 Start service by running command
-<code>npm run redirectsvc<br></code>
+<code>npm run redirectsvc</code><br>
 Remember that this does't include the manager debug.
 
 Update the environment variables in package.json for the local script if any changes are required
@@ -46,7 +46,7 @@ redirectsvc can directly be deployed to lambda since it doesn't have any non-aws
 - Run command ```npm install short-unique-id```
 - Remove the package.json and package-lock.json files (this is not required in lambda)
 - Create a deployment zip by running command ```zip -r linkmanagerdeploy.zip .```
-- Upload to lambda by running command ```aws lambda update-function-code --function-name {{Function Name}} --zip-file fileb://./linkmanager.zip```
+- Upload to lambda by running command ```aws lambda update-function-code --function-name {{Function Name}} --zip-file fileb://./linkmanagerdeploy.zip```
 - Replace the function name and add an aws profile if required
 
 ## Project file descriptions
