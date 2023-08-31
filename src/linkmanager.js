@@ -26,7 +26,7 @@
         "destination": "url string",
         "startdate": "date string",
         "enddate": "date string",
-        "domains": {
+        "aliases": {
             "[domainname]": {
                 "startdate": "date string",
                 "enddate": "date string"
@@ -38,18 +38,18 @@
     If the action is update, then the id is required. The rest of the fields are optional.
         To remove a field, pass false to the attribute
         To add a field, pass the data for that field
-        This includes domains or the start and end dates within the domains
+        This includes aliases or the start and end dates within the aliases
     If the action is delete, then only the id is required.
     The description parameter is optional and will be used for analytics and reporting
 
-    The domains object is optional. If present, it should be a JSON object with the following format:
+    The aliases object is optional. If present, it should be a JSON object with the following format:
     {
         "[domainname]": {
             "startdate": "date string",
             "enddate": "date string"
         }
     }
-    Where any number of domains can be added to the object. Each of them contain their own rule
+    Where any number of aliases can be added to the object. Each of them contain their own rule
     The redirect function will look for the rule if it exists and apply.
     Note that If no rule exists for the domain, the default rule is not taken. The URL will be indefinitely available when accessed through that domain
 
@@ -82,7 +82,7 @@ if (process.env.LOCAL) {
 }
 const dynamoclient = new DynamoDB(dynamoprops);
 
-var uid = new ShortUniqueId({ length: process.env.ID_LENGTH });
+var uid = new ShortUniqueId({ length: 5 });
 
 exports.handler = async (event) => {
     var response = {
@@ -102,14 +102,14 @@ exports.handler = async (event) => {
             if (event.destination == undefined) {
                 response.error = "Missing destination";
             }
-            else if(event.description != undefined && typeof(event.description) != "string") {
+            else if (event.description != undefined && typeof (event.description) != "string") {
                 response.error = "Invalid description";
             }
             else {
                 var data = {
                     destination: event.destination,
                     createddate: Date.now(),
-                    domains: {},
+                    aliases: {},
                     logs: {}
                 };
                 var validation = validate(event);
@@ -120,18 +120,18 @@ exports.handler = async (event) => {
                     data.startdate = event.startdate;
                     data.enddate = event.enddate;
                     var isvalid = true;
-                    if (event.domains) {
-                        for (var domain in event.domains) {
-                            validation = validate(event.domains[domain]);
+                    if (event.aliases) {
+                        for (var domain in event.aliases) {
+                            validation = validate(event.aliases[domain]);
                             if (!validation.valid) {
                                 response.error = `Invalid field(s) for domain "${domain}": ${validation.errorfield.join(',')}`;
                                 isvalid = false;
                                 break;
                             }
                             else {
-                                data.domains[domain] = {
-                                    startdate: event.domains[domain].startdate,
-                                    enddate: event.domains[domain].enddate
+                                data.aliases[domain] = {
+                                    startdate: event.aliases[domain].startdate,
+                                    enddate: event.aliases[domain].enddate
                                 }
                             }
                         }
@@ -142,7 +142,7 @@ exports.handler = async (event) => {
                         do {
                             // Generate new id
                             data.id = process.env.ID_LENGTH >= 10 && process.env.INCLUDE_TIME_STAMP ? uid.stamp(process.env.ID_LENGTH) : uid();
-                            const dynamoresponse = getlink(data.id);
+                            const dynamoresponse = await getlink(data.id);
                             if (dynamoresponse.Item) {
                                 duplicateid = true;
                             }
@@ -155,7 +155,9 @@ exports.handler = async (event) => {
                         */
                         response.id = data.id;
                         // Build dynamo object
-                        var dynamoobj = marshall(data);
+                        var dynamoobj = marshall(data, {
+                            removeUndefinedValues: true
+                        });
                         const dynamonewlinkresponse = await dynamoclient.putItem({
                             TableName: process.env.LINKS_TABLE,
                             ReturnConsumedCapacity: "INDEXES",
@@ -164,17 +166,11 @@ exports.handler = async (event) => {
                         if (dynamonewlinkresponse && dynamonewlinkresponse.ConsumedCapacity) {
                             response.consumedcapacityUnits += dynamonewlinkresponse.ConsumedCapacity.CapacityUnits;
                         }
-                        const dynamotenantlinkresponse = await dynamoclient.updateItem({
+                        // An entry to tenant links table is made where tenant and environment are identified as tenant.environment
+                        const dynamotenantlinkresponse = await dynamoclient.putItem({
                             TableName: process.env.TENANT_LINKS_TABLE,
                             ReturnConsumedCapacity: "INDEXES",
-                            Key: marshall({ environmentid: event.environmentid, tenantid: event.tenantid }),
-                            UpdateExpression: "set #linkid = :linkid",
-                            ExpressionAttributeNames: {
-                                "#linkid": 'linkid',
-                            },
-                            ExpressionAttributeValues: {
-                                ":linkid": marshall(data.id)
-                            }
+                            Item: marshall({ id: `${event.environmentid}.${event.tenantid}`, linkid: data.id })
                         });
                         if (dynamotenantlinkresponse && dynamotenantlinkresponse.ConsumedCapacity) {
                             response.consumedcapacityUnits += dynamotenantlinkresponse.ConsumedCapacity.CapacityUnits;
@@ -187,35 +183,44 @@ exports.handler = async (event) => {
             // TODO: Validate event parameters and update the link along with logs.
         }
         else if (event.action == "delete") {
-            if (event.id == undefined) {
+            if (event.id == undefined || event.id.length == 0) {
                 response.error = "Missing id";
             }
             else {
-                const dynamoresponse = getlink(event.id);
-                if (dynamoresponse && dynamoresponse.ConsumedCapacity.CapacityUnits) {
-                    response.consumedcapacityUnits += dynamoresponse.ConsumedCapacity.CapacityUnits;
+                const dynamotenantlinksresoponse = await gettenantlink(event.environmentid, event.tenantid, event.id);
+                if (dynamotenantlinksresoponse && dynamotenantlinksresoponse.ConsumedCapacity.CapacityUnits) {
+                    response.consumedcapacityUnits += dynamotenantlinksresoponse.ConsumedCapacity.CapacityUnits;
                 }
-                if (!dynamoresponse.Item) {
+                if (!dynamotenantlinksresoponse.Item) {
                     response.error = "Link not found";
                 }
-                else if (unmarshall(dynamoresponse.Item).deleteddate) {
-                    response.error = "Link already deleted";
-                }
                 else {
-                    const deleteresponse = await dynamoclient.updateItem({
-                        TableName: process.env.LINKS_TABLE,
-                        ReturnConsumedCapacity: "INDEXES",
-                        Key: marshall({ id: event.id }),
-                        UpdateExpression: "set #deleteddate = :deleteddate",
-                        ExpressionAttributeNames: {
-                            "#deleteddate": 'deleteddate',
-                        },
-                        ExpressionAttributeValues: {
-                            ":deleteddate": marshall(Date.now())
+                    const dynamoresponse = await getlink(event.id);
+                    if (dynamoresponse && dynamoresponse.ConsumedCapacity.CapacityUnits) {
+                        response.consumedcapacityUnits += dynamoresponse.ConsumedCapacity.CapacityUnits;
+                    }
+                    if (!dynamoresponse.Item) {
+                        response.error = "Link not found";
+                    }
+                    else if (unmarshall(dynamoresponse.Item).deleteddate) {
+                        response.error = "Link already deleted";
+                    }
+                    else {
+                        const deleteresponse = await dynamoclient.updateItem({
+                            TableName: process.env.LINKS_TABLE,
+                            ReturnConsumedCapacity: "INDEXES",
+                            Key: marshall({ id: event.id }),
+                            UpdateExpression: "set #deleteddate = :deleteddate",
+                            ExpressionAttributeNames: {
+                                "#deleteddate": 'deleteddate',
+                            },
+                            ExpressionAttributeValues: {
+                                ":deleteddate": marshall(Date.now())
+                            }
+                        });
+                        if (deleteresponse && deleteresponse.ConsumedCapacity) {
+                            response.consumedcapacityUnits += deleteresponse.ConsumedCapacity.CapacityUnits;
                         }
-                    });
-                    if (deleteresponse && deleteresponse.ConsumedCapacity) {
-                        response.consumedcapacityUnits += deleteresponse.ConsumedCapacity.CapacityUnits;
                     }
                 }
             }
@@ -232,7 +237,7 @@ exports.handler = async (event) => {
         response.error = "Internal server error";
     }
     finally {
-        if(response.error) {
+        if (response.error) {
             console.log(`Error creating short link! ${response.error}. Refer below for event.`);
             console.log(event);
         }
@@ -244,14 +249,15 @@ function validate(data) {
     var ret = {
         valid: true
     }
-    if (data.startdate && isNaN(new Date(startdate))) {
+    if (data.startdate && isNaN(new Date(data.startdate))) {
         ret.valid = false;
         ret.errorfield = ["start date"];
     }
-    if (data.enddate && isNaN(new Date(enddate))) {
+    if (data.enddate && isNaN(new Date(data.enddate))) {
         ret.valid = false;
         ret.errorfield = (ret.errorfield || []).concat("end date");
     }
+    return ret;
 }
 
 async function getlink(id) {
@@ -259,5 +265,13 @@ async function getlink(id) {
         TableName: process.env.LINKS_TABLE,
         ReturnConsumedCapacity: "INDEXES",
         Key: marshall({ id: id })
+    });
+}
+
+async function gettenantlink(environmentid, tenantid, id) {
+    return await dynamoclient.getItem({
+        TableName: process.env.TENANT_LINKS_TABLE,
+        ReturnConsumedCapacity: "INDEXES",
+        Key: marshall({ id: `${environmentid}.${tenantid}`, linkid: id })
     });
 }

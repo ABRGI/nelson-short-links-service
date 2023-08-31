@@ -30,13 +30,28 @@ app.use(bodyparser.json());
 /*
     API to test shortlink generation.
     Pass data for the short links service into the request body in the same format expected by linkmanager
+    Using PUT so we can have a dynamic payload
 */
 app.put('/shortlink', function (req, res) {
     console.log(`Requesting new short link for`);
-    console.log(req.params);
-    linkmanager.handler(req.params).then((ret) => {
+    console.log(req.body);
+    linkmanager.handler(req.body).then((ret) => {
         res.send(ret);
     }).catch(function (err) {
         console.log(err);
     });
+});
+
+app.delete('/shortlink', function (req, res) {
+    console.log(`Deleting short link for`);
+    console.log(req.body);
+    linkmanager.handler(req.body).then((ret) => {
+        res.send(ret);
+    }).catch(function (err) {
+        console.log(err);
+    });
+});
+
+app.listen(port, function () {
+    console.log(`Link manager server started on port ${port}`);
 });
