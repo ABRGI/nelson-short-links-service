@@ -38,7 +38,9 @@
     If the action is update, then the id is required. The rest of the fields are optional.
         To remove a field, pass false to the attribute
         To add a field, pass the data for that field
-        This includes aliases or the start and end dates within the aliases
+        Note:
+            Destination can not be removed. It can only be updated
+            Only the root alias object can be updated to a new object or removed. Values within the alias can not be updated
     If the action is delete, then only the id is required.
     The description parameter is optional and will be used for analytics and reporting
 
@@ -89,6 +91,7 @@ exports.handler = async (event) => {
         consumedcapacityUnits: 0
     };
     try {
+        var now = Date.now();
         if (event.environmentid == undefined || typeof (event.environmentid) != "string") {
             response.error = "Invalid environmentid";
         }
@@ -108,7 +111,7 @@ exports.handler = async (event) => {
             else {
                 var data = {
                     destination: event.destination,
-                    createddate: Date.now(),
+                    createddate: now,
                     aliases: {},
                     logs: {}
                 };
@@ -117,8 +120,9 @@ exports.handler = async (event) => {
                     response.error = `Invalid field(s): ${validation.errorfield.join(',')}`;
                 }
                 else {
-                    data.startdate = event.startdate;
-                    data.enddate = event.enddate;
+                    data.startdate = event.startdate ? new Date(event.startdate).getTime() : undefined;
+                    data.enddate = event.enddate ? new Date(event.enddate).getTime() : undefined;
+                    data.description = event.description;
                     var isvalid = true;
                     if (event.aliases) {
                         for (var domain in event.aliases) {
@@ -130,8 +134,8 @@ exports.handler = async (event) => {
                             }
                             else {
                                 data.aliases[domain] = {
-                                    startdate: event.aliases[domain].startdate,
-                                    enddate: event.aliases[domain].enddate
+                                    startdate: event.aliases[domain].startdate ? new Date(event.aliases[domain].startdate).getTime() : undefined,
+                                    enddate: event.aliases[domain].enddate ? new Date(event.aliases[domain].enddate).getTime() : undefined
                                 }
                             }
                         }
@@ -154,6 +158,14 @@ exports.handler = async (event) => {
                             The response in its current state is logged along with the exception message
                         */
                         response.id = data.id;
+                        data.logs[now.toString()] = [
+                            `Created short link`,
+                            `Destination: ${data.destination}`,
+                            `Description: ${data.description}`,
+                            `Start date: ${data.startdate ? new Date(data.startdate).toISOString() : "N/A"}`,
+                            `End date: ${data.enddate ? new Date(data.enddate).toISOString() : "N/A"}`,
+                            `Aliases: ${JSON.stringify(data.aliases)}`,                            
+                        ];
                         // Build dynamo object
                         var dynamoobj = marshall(data, {
                             removeUndefinedValues: true
@@ -180,7 +192,148 @@ exports.handler = async (event) => {
             }
         }
         else if (event.action == "update") {
-            // TODO: Validate event parameters and update the link along with logs.
+            if (event.id == undefined || event.id.length == 0) {
+                response.error = "Missing id";
+            }
+            else if (event.destination != undefined && typeof (event.destination) != "string") {
+                response.error = "Invalid destination";
+            }
+            else if (event.description != undefined && typeof (event.description) != "string" && event.description !== false) {
+                response.error = "Invalid description";
+            }
+            else {
+                var validation = validate(event);
+                if (!validation.valid) {
+                    response.error = `Invalid field(s): ${validation.errorfield.join(',')}`;
+                }
+                else {
+                    //Check if record exists for the tenant, environment and id
+                    const dynamotenantlinksresoponse = await gettenantlink(event.environmentid, event.tenantid, event.id);
+                    if (dynamotenantlinksresoponse && dynamotenantlinksresoponse.ConsumedCapacity.CapacityUnits) {
+                        response.consumedcapacityUnits += dynamotenantlinksresoponse.ConsumedCapacity.CapacityUnits;
+                    }
+                    if (!dynamotenantlinksresoponse.Item) {
+                        response.error = "Link not found";
+                    }
+                    else {
+                        const dynamoresponse = await getlink(event.id);
+                        if (dynamoresponse && dynamoresponse.ConsumedCapacity.CapacityUnits) {
+                            response.consumedcapacityUnits += dynamoresponse.ConsumedCapacity.CapacityUnits;
+                        }
+                        if (!dynamoresponse.Item) {
+                            response.error = "Link not found";
+                        }
+                        else if (unmarshall(dynamoresponse.Item).deleteddate) {
+                            response.error = "Deleted link cannot be updated";
+                        }
+                        else {
+                            //Start creating the dynamo update statements
+                            //Step 1: Identify values to update
+                            var updateexpressionnames = {
+                                '#logdate': now.toString()
+                            };
+                            var updateexpressionvalues = {};
+                            var updatevalues = ["logs.#logdate=:logdata"];
+                            var deletevalues = [];
+                            var logdata = [];
+                            if (event.destination != null) {
+                                updateexpressionnames['#destination'] = 'destination';
+                                if (typeof (event.destination) == "string") {
+                                    updateexpressionvalues[':destination'] = marshall(event.destination);
+                                    updatevalues.push('#destination=:destination');
+                                    logdata.push('Updated destination to ' + event.destination);
+                                }
+                            }
+                            if (event.description != null) {
+                                updateexpressionnames['#description'] = 'description';
+                                if (typeof (event.description) == "string") {
+                                    updateexpressionvalues[':description'] = marshall(event.description);
+                                    updatevalues.push('#description=:description');
+                                    logdata.push('Updated description to ' + event.description);
+                                }
+                                else {
+                                    deletevalues.push('#description');
+                                    logdata.push('Deleted description');
+                                }
+                            }
+                            if (event.startdate != null) {
+                                updateexpressionnames['#startdate'] = 'startdate';
+                                if (typeof (event.startdate) == "boolean") {
+                                    deletevalues.push('#startdate');
+                                    logdata.push('Deleted startdate');
+                                }
+                                else {
+                                    updateexpressionvalues[':startdate'] = marshall(event.startdate);
+                                    updatevalues.push('#startdate=:startdate');
+                                    logdata.push('Updated startdate to ' + event.startdate);
+                                }
+                            }
+                            if (event.enddate != null) {
+                                updateexpressionnames['#enddate'] = 'enddate';
+                                if (typeof (event.enddate) == "boolean") {
+                                    deletevalues.push('#enddate');
+                                    logdata.push('Deleted enddate');
+                                }
+                                else {
+                                    updateexpressionvalues[':enddate'] = marshall(event.enddate);
+                                    updatevalues.push('#enddate=:enddate');
+                                    logdata.push('Updated enddate to ' + event.enddate);
+                                }
+                            }
+                            var aliasupdatevaluesvalid = true;
+                            if (event.aliases) {
+                                var aliasindex = 0;
+                                for (var domain in event.aliases) {
+                                    updateexpressionnames[`#alias${++aliasindex}`] = domain;
+                                    if (event.aliases[domain] === false) {
+                                        deletevalues.push(`aliases.#alias${aliasindex}`);
+                                        logdata.push(`Deleted alias for domain ${domain}`);
+                                    }
+                                    else {
+                                        validation = validate(event.aliases[domain]);
+                                        if (!validation.valid) {
+                                            response.error = `Invalid field(s) for domain "${domain}": ${validation.errorfield.join(',')}`;
+                                            aliasupdatevaluesvalid = false;
+                                            break;
+                                        }
+                                        else {
+                                            updateexpressionvalues[`:alias${aliasindex}`] = {
+                                                M: marshall({
+                                                    startdate: event.aliases[domain].startdate ? new Date(event.aliases[domain].startdate).getTime() : undefined,
+                                                    enddate: event.aliases[domain].enddate ? new Date(event.aliases[domain].enddate).getTime() : undefined
+                                                }, {
+                                                    removeUndefinedValues: true
+                                                })
+                                            };
+                                            updatevalues.push(`aliases.#alias${aliasindex}=:alias${aliasindex}`);
+                                            logdata.push(`Updated alias for domain ${domain} to startdate: ${event.aliases[domain].startdate}; enddate: ${event.aliases[domain].enddate}`);
+                                        }
+                                    }
+                                }
+                            }
+                            if (aliasupdatevaluesvalid) {
+                                updateexpressionvalues[':logdata'] = { L: marshall(logdata) };
+                                var updatestring = `set ${updatevalues.join(',')}`;
+                                if (deletevalues.length > 0) {
+                                    updatestring += ` remove ${deletevalues.join(',')}`;
+                                }
+                                // Update dynamo
+                                const dynamoupdateresponse = await dynamoclient.updateItem({
+                                    TableName: process.env.LINKS_TABLE,
+                                    ReturnConsumedCapacity: "INDEXES",
+                                    Key: marshall({ id: event.id }),
+                                    UpdateExpression: updatestring,
+                                    ExpressionAttributeNames: updateexpressionnames,
+                                    ExpressionAttributeValues: updateexpressionvalues
+                                });
+                                if (dynamoupdateresponse && dynamoupdateresponse.ConsumedCapacity) {
+                                    response.consumedcapacityUnits += dynamoupdateresponse.ConsumedCapacity.CapacityUnits;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         else if (event.action == "delete") {
             if (event.id == undefined || event.id.length == 0) {
@@ -206,7 +359,7 @@ exports.handler = async (event) => {
                         response.error = "Link already deleted";
                     }
                     else {
-                        const deleteresponse = await dynamoclient.updateItem({
+                        const dynamodeleteresponse = await dynamoclient.updateItem({
                             TableName: process.env.LINKS_TABLE,
                             ReturnConsumedCapacity: "INDEXES",
                             Key: marshall({ id: event.id }),
@@ -215,11 +368,11 @@ exports.handler = async (event) => {
                                 "#deleteddate": 'deleteddate',
                             },
                             ExpressionAttributeValues: {
-                                ":deleteddate": marshall(Date.now())
+                                ":deleteddate": marshall(now)
                             }
                         });
-                        if (deleteresponse && deleteresponse.ConsumedCapacity) {
-                            response.consumedcapacityUnits += deleteresponse.ConsumedCapacity.CapacityUnits;
+                        if (dynamodeleteresponse && dynamodeleteresponse.ConsumedCapacity) {
+                            response.consumedcapacityUnits += dynamodeleteresponse.ConsumedCapacity.CapacityUnits;
                         }
                     }
                 }
@@ -249,11 +402,11 @@ function validate(data) {
     var ret = {
         valid: true
     }
-    if (data.startdate && isNaN(new Date(data.startdate))) {
+    if (data.startdate && (data.startdate === true || isNaN(new Date(data.startdate)))) {
         ret.valid = false;
         ret.errorfield = ["start date"];
     }
-    if (data.enddate && isNaN(new Date(data.enddate))) {
+    if (data.enddate && (data.enddate === true || isNaN(new Date(data.enddate)))) {
         ret.valid = false;
         ret.errorfield = (ret.errorfield || []).concat("end date");
     }

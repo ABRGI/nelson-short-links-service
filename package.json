@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "manager": "PORT=8002 LOCAL=true ENV_REGION=eu-central-1 LINKS_TABLE=Test-nelson-shortlinks TENANT_LINKS_TABLE=Test-nelson-tenant-shortlinks ID_LENGTH=8 INCLUDE_TIME_STAMP=false ACCESSKEY={{AWS Access Key}} SECRETKEY={{AWS Secret Key}} npx nodemon index.js"
+    "manager": "PORT=8002 LOCAL=true ENV_REGION=eu-central-1 LINKS_TABLE=Test-nelson-shortlinks TENANT_LINKS_TABLE=Test-nelson-tenant-shortlinks ID_LENGTH=5 INCLUDE_TIME_STAMP=false ACCESSKEY={{AWS Access Key}} SECRETKEY={{AWS Secret Key}} npx nodemon index_manager.js"
   },
   "repository": {
     "type": "git",
