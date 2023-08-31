@@ -47,6 +47,16 @@ Update the environment variables in package.json for the local script if any cha
 
 Alternately, to debug the code on vscode, a vs launch.json has been included. Update the AWS credentials and any other environment variables as required to use this.
 
+## Lambda deployment instructions
+redirectsvc can directly be deployed to lambda since it doesn't have any non-aws library dependency. This instruction is for link manager which has external dependency
+- Create a new folder called link manager
+- Copy the linkmanager.js file to the new folder
+- Run command ```npm install short-unique-id```
+- Remove the package.json and package-lock.json files (this is not required in lambda)
+- Create a deployment zip by running command ```zip -r linkmanagerdeploy.zip .```
+- Upload to lambda by running command ```aws lambda update-function-code --function-name {{Function Name}} --zip-file fileb://./linkmanager.zip```
+- Replace the function name and add an aws profile if required
+
 ## Project file descriptions
 There are 3 key files in the project
 <ul>

@@ -75,7 +75,7 @@ const { DynamoDB } = require("@aws-sdk/client-dynamodb");
 const { unmarshall, marshall } = require("@aws-sdk/util-dynamodb");
 const ShortUniqueId = require('short-unique-id');
 
-const dynamoprops = { region: process.env.ENV_REGION }
+const dynamoprops = { region: process.env.ENV_REGION };
 if (process.env.LOCAL) {
     dynamoprops.credentials = {
         accessKeyId: process.env.ACCESSKEY,
@@ -136,7 +136,7 @@ exports.handler = async (event) => {
                                 data.aliases[domain] = {
                                     startdate: event.aliases[domain].startdate ? new Date(event.aliases[domain].startdate).getTime() : undefined,
                                     enddate: event.aliases[domain].enddate ? new Date(event.aliases[domain].enddate).getTime() : undefined
-                                }
+                                };
                             }
                         }
                     }
@@ -202,9 +202,9 @@ exports.handler = async (event) => {
                 response.error = "Invalid description";
             }
             else {
-                var validation = validate(event);
-                if (!validation.valid) {
-                    response.error = `Invalid field(s): ${validation.errorfield.join(',')}`;
+                var updatevalidation = validate(event);
+                if (!updatevalidation.valid) {
+                    response.error = `Invalid field(s): ${updatevalidation.errorfield.join(',')}`;
                 }
                 else {
                     //Check if record exists for the tenant, environment and id
@@ -401,7 +401,7 @@ exports.handler = async (event) => {
 function validate(data) {
     var ret = {
         valid: true
-    }
+    };
     if (data.startdate && (data.startdate === true || isNaN(new Date(data.startdate)))) {
         ret.valid = false;
         ret.errorfield = ["start date"];
