@@ -22,18 +22,15 @@ Update the environment variables in package.json file before running the below c
 
 #### Link redirection
 <ul>
-<li>Make sure that the TenantLinks table is updated with all the required alias for the tenant</li>
-<li>Update the hosts file to point all the test domans to 0.0.0.0 or 127.0.0.1 (localhost)</li>
+<li>Make sure that the links record in the TenantLinks table is updated with all the required alias for the tenant</li>
+<li>Update the hosts file to point all the test domains to 0.0.0.0 or 127.0.0.1 (localhost)</li>
 <li>Start the redirect service using 
-<code>npm run startredirectsvc --host=XXXXX [--port=80]</code>
-<br>Replace host and port with the test domain and ports. The optional port is 80 by default to support http requests. The service doesn't support HTTPS requests for local testing yet.
-<br>To test multiple hosts, start multiple instances of the service with different host values
+<code>npm run redirect</code>
+<br>To test multiple hosts, just point all the domains to 0.0.0.0 or 127.0.0.1. This is sufficient to test
 </li>
-</li>Open the test link using a browser. The service should redirect you the expected destination or respond with error 404 
+</li>Open the test link using a browser. The service should redirect you the expected destination or respond with error 404 or 403
 </ul>
-Start service by running command
-<code>npm run redirectsvc</code><br>
-Remember that this does't include the manager debug.
+Remember that this does't include the link manager debug service.
 
 Update the environment variables in package.json for the local script if any changes are required
 

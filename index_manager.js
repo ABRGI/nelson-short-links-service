@@ -72,6 +72,21 @@ app.delete('/shortlink', function (req, res) {
     });
 });
 
+/*
+    API to read shortlink data.
+*/
+app.get('/shortlink/:id', function (req, res) {
+    console.log(`Getting short link for id ${req.params.id}`);
+    linkmanager.handler({
+        "id": req.params.id,
+        "action": "get"
+    }).then((ret) => {
+        res.send(ret);
+    }).catch(function (err) {
+        console.log(err);
+    });
+});
+
 app.listen(port, function () {
     console.log(`Link manager server started on port ${port}`);
 });

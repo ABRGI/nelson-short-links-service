@@ -31,9 +31,10 @@
                 "startdate": "date string",
                 "enddate": "date string"
             }
-        }
+        },
+        "linkidprefix": ""
     }
-    The environmentid and tenantid params are required for all actions
+    The environmentid and tenantid params are required for all actions except get
     If the action is create, then only the destination is required. The start and end dates are optional
     If the action is update, then the id is required. The rest of the fields are optional.
         To remove a field, pass false to the attribute
@@ -42,6 +43,7 @@
             Destination can not be removed. It can only be updated
             Only the root alias object can be updated to a new object or removed. Values within the alias can not be updated
     If the action is delete, then only the id is required.
+    If the action is get, then only the id is required. This will return the complete link data along with all logs
     The description parameter is optional and will be used for analytics and reporting
 
     The aliases object is optional. If present, it should be a JSON object with the following format:
@@ -54,6 +56,9 @@
     Where any number of aliases can be added to the object. Each of them contain their own rule
     The redirect function will look for the rule if it exists and apply.
     Note that If no rule exists for the domain, the default rule is not taken. The URL will be indefinitely available when accessed through that domain
+
+    The linkidprefix optional property is used only with the create action and adds a prefix text to the link
+    This is useful if you want a common pattern to define behavior in a cloudfront distribution or similar
 
     The function will add an entry to the tenant list table to get a quick summary of all links owned by a client/environment
     The function will add change logs to the links table entry under the logs object
@@ -92,14 +97,32 @@ exports.handler = async (event) => {
     };
     try {
         var now = Date.now();
-        if (event.environmentid == undefined || typeof (event.environmentid) != "string") {
+        if (event.action == undefined || typeof (event.action) != "string") {
+            response.error = "Invalid action";
+        }
+        else if (event.action == "get") {
+            if (event.id == undefined || event.id.length == 0) {
+                response.error = "Missing id";
+            }
+            else {
+
+                const dynamoresponse = await getlink(event.id);
+                if (dynamoresponse && dynamoresponse.ConsumedCapacity.CapacityUnits) {
+                    response.consumedcapacityUnits += dynamoresponse.ConsumedCapacity.CapacityUnits;
+                }
+                if (!dynamoresponse.Item) {
+                    response.error = "Link not found";
+                }
+                else {
+                    response.body = unmarshall(dynamoresponse.Item);
+                }
+            }
+        }
+        else if (event.environmentid == undefined || typeof (event.environmentid) != "string") {
             response.error = "Invalid environmentid";
         }
         else if (event.tenantid == undefined || typeof (event.tenantid) != "string") {
             response.error = "Invalid tenantid";
-        }
-        else if (event.action == undefined || typeof (event.action) != "string") {
-            response.error = "Invalid action";
         }
         else if (event.action == "create") {
             if (event.destination == undefined) {
@@ -108,7 +131,11 @@ exports.handler = async (event) => {
             else if (event.description != undefined && typeof (event.description) != "string") {
                 response.error = "Invalid description";
             }
+            else if (event.linkidprefix != undefined && typeof (event.linkidprefix) != "string") {
+                response.error = "Invalid linkidprefix";
+            }
             else {
+                event.linkidprefix = event.linkidprefix || '';  //Set empty linkid prefix
                 var data = {
                     destination: event.destination,
                     createddate: now,
@@ -145,7 +172,7 @@ exports.handler = async (event) => {
                         var duplicateid = false;
                         do {
                             // Generate new id
-                            data.id = process.env.ID_LENGTH >= 10 && process.env.INCLUDE_TIME_STAMP ? uid.stamp(process.env.ID_LENGTH) : uid();
+                            data.id = `${event.linkidprefix}${process.env.ID_LENGTH >= 10 && process.env.INCLUDE_TIME_STAMP ? uid.stamp(process.env.ID_LENGTH) : uid()}`;
                             const dynamoresponse = await getlink(data.id);
                             if (dynamoresponse.Item) {
                                 duplicateid = true;
@@ -164,7 +191,7 @@ exports.handler = async (event) => {
                             `Description: ${data.description}`,
                             `Start date: ${data.startdate ? new Date(data.startdate).toISOString() : "N/A"}`,
                             `End date: ${data.enddate ? new Date(data.enddate).toISOString() : "N/A"}`,
-                            `Aliases: ${JSON.stringify(data.aliases)}`,                            
+                            `Aliases: ${JSON.stringify(data.aliases)}`,
                         ];
                         // Build dynamo object
                         var dynamoobj = marshall(data, {
