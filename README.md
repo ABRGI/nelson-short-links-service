@@ -45,6 +45,8 @@ redirectsvc can directly be deployed to lambda since it doesn't have any non-aws
 - Create a deployment zip by running command ```zip -r linkmanagerdeploy.zip .```
 - Upload to lambda by running command ```aws lambda update-function-code --function-name {{Function Name}} --zip-file fileb://./linkmanagerdeploy.zip```
 - Replace the function name and add an aws profile if required
+- Add the error pages to an S3 bucket and configure it through a cloudfront distribution
+- In the cloudfront distribution, configure the error pages to the public link of these pages
 
 ## Project file descriptions
 There are 3 key files in the project
