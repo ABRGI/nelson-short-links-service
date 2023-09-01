@@ -290,6 +290,7 @@ exports.handler = async (event) => {
                                     logdata.push('Deleted startdate');
                                 }
                                 else {
+                                    event.startdate = new Date(event.startdate).getTime();
                                     updateexpressionvalues[':startdate'] = marshall(event.startdate);
                                     updatevalues.push('#startdate=:startdate');
                                     logdata.push('Updated startdate to ' + event.startdate);
@@ -302,6 +303,7 @@ exports.handler = async (event) => {
                                     logdata.push('Deleted enddate');
                                 }
                                 else {
+                                    event.enddate = new Date(event.enddate).getTime();
                                     updateexpressionvalues[':enddate'] = marshall(event.enddate);
                                     updatevalues.push('#enddate=:enddate');
                                     logdata.push('Updated enddate to ' + event.enddate);
@@ -433,9 +435,15 @@ function validate(data) {
         ret.valid = false;
         ret.errorfield = ["start date"];
     }
+    else {
+        data.startdate = new Date(data.startdate).getTime();
+    }
     if (data.enddate && (data.enddate === true || isNaN(new Date(data.enddate)))) {
         ret.valid = false;
         ret.errorfield = (ret.errorfield || []).concat("end date");
+    }
+    else {
+        data.enddate = new Date(data.enddate).getTime();
     }
     return ret;
 }

@@ -61,13 +61,13 @@ exports.handler = async (event) => {
                 else {
                     var now = Date.now();
                     var domain = event.headers['nelson-host'] || null;
-                    var enddate = ((domain != null && linkdata.aliases[domain]) ? linkdata.aliases[domain].enddate : linkdata.enddate) || now;
-                    var startdate = (domain != null && linkdata.aliases[domain]) ? linkdata.aliases[domain].startdate : linkdata.startdate || now;
+                    var enddate = (((domain != null && linkdata.aliases[domain]) ? linkdata.aliases[domain].enddate : null) || linkdata.enddate) || now;
+                    var startdate = ((domain != null && linkdata.aliases[domain]) ? linkdata.aliases[domain].startdate : null) || linkdata.startdate || now;
                     if (now < startdate) {
                         response.statusCode = 404;
                         response.body = "Link not found";
                     }
-                    else if(now > enddate) {
+                    else if (now > enddate) {
                         response.statusCode = 403;
                         response.body = "Link expired";
                     }
