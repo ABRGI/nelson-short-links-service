@@ -89,7 +89,7 @@ if (process.env.LOCAL) {
 }
 const dynamoclient = new DynamoDB(dynamoprops);
 
-var uid = new ShortUniqueId({ length: 5 });
+var uid = new ShortUniqueId({ length: process.env.ID_LENGTH });
 
 exports.handler = async (event) => {
     var response = {
