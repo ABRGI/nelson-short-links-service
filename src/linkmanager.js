@@ -209,7 +209,7 @@ exports.handler = async (event) => {
                         const dynamotenantlinkresponse = await dynamoclient.putItem({
                             TableName: process.env.TENANT_LINKS_TABLE,
                             ReturnConsumedCapacity: "INDEXES",
-                            Item: marshall({ id: `${event.environmentid}.${event.tenantid}`, linkid: data.id })
+                            Item: marshall({ id: `${event.tenantid}.${event.environmentid}`, linkid: data.id })
                         });
                         if (dynamotenantlinkresponse && dynamotenantlinkresponse.ConsumedCapacity) {
                             response.consumedcapacityUnits += dynamotenantlinkresponse.ConsumedCapacity.CapacityUnits;
@@ -460,6 +460,6 @@ async function gettenantlink(environmentid, tenantid, id) {
     return await dynamoclient.getItem({
         TableName: process.env.TENANT_LINKS_TABLE,
         ReturnConsumedCapacity: "INDEXES",
-        Key: marshall({ id: `${environmentid}.${tenantid}`, linkid: id })
+        Key: marshall({ id: `${tenantid}.${environmentid}`, linkid: id })
     });
 }
