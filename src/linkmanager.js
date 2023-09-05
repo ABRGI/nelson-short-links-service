@@ -172,7 +172,7 @@ exports.handler = async (event) => {
                         var duplicateid = false;
                         do {
                             // Generate new id
-                            data.id = `${event.linkidprefix}${process.env.ID_LENGTH >= 10 && process.env.INCLUDE_TIME_STAMP ? uid.stamp(process.env.ID_LENGTH) : uid()}`;
+                            data.id = `${event.linkidprefix || ''}${process.env.ID_LENGTH >= 10 && process.env.INCLUDE_TIME_STAMP ? uid.stamp(process.env.ID_LENGTH) : uid()}`;
                             const dynamoresponse = await getlink(data.id);
                             if (dynamoresponse.Item) {
                                 duplicateid = true;
