@@ -1,0 +1,136 @@
+{
+	"info": {
+		"_postman_id": "77b3c814-be2a-4c6e-b642-590561065f64",
+		"name": "Short Links",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1502780",
+		"_collection_link": "https://antasevis.postman.co/workspace/Nelson~b358c449-b4b9-4d81-8fab-8172e04f6762/collection/1502780-77b3c814-be2a-4c6e-b642-590561065f64?action=share&source=collection_link&creator=1502780"
+	},
+	"item": [
+		{
+			"name": "Create ShortLink",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"environmentid\": \"local-test-env\",\n    \"tenantid\": \"local-test-tenant\",\n    \"action\": \"create\",\n    \"destination\": \"https://www.google.com\",\n    \"startdate\": \"2023-08-13\",\n    \"enddate\": \"2024-04-15\",\n    \"description\": \"Test google redirect\",\n    \"aliases\": {\n        \"ts.ly\": {  \n            \"startdate\": \"2023-09-13\"\n        },\n        \"om.co\": {  \n            \"enddate\": \"2023-08-1\"\n        },\n        \"bt.io\": {\n            \"startdate\": \"2023-07-1\",\n            \"enddate\": \"2024-04-15\"\n        }\n    },\n    \"linkidprefix\": \"l\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{domain}}:{{shortlinksport}}/shortlink",
+					"host": [
+						"{{domain}}"
+					],
+					"port": "{{shortlinksport}}",
+					"path": [
+						"shortlink"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update ShortLink",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"environmentid\": \"local-test-env\",\n    \"tenantid\": \"local-test-tenant\",\n    \"action\": \"update\",\n    \"id\": \"ltWJjN\",\n    \"description\": false,\n    \"startdate\": \"2023-08-12\",\n    \"enddate\": false,\n    \"destination\": \"https://www.nelson.management/\",\n    \"aliases\": {\n        \"om.co\": {\n            \"enddate\": \"2023-09-2\"\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{domain}}:{{shortlinksport}}/shortlink",
+					"host": [
+						"{{domain}}"
+					],
+					"port": "{{shortlinksport}}",
+					"path": [
+						"shortlink"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete ShortLink",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"environmentid\": \"local-test-env\",\n    \"tenantid\": \"local-test-tenant\",\n    \"action\": \"delete\",\n    \"id\": \"ltWJjN\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{domain}}:{{shortlinksport}}/shortlink",
+					"host": [
+						"{{domain}}"
+					],
+					"port": "{{shortlinksport}}",
+					"path": [
+						"shortlink"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Read ShortLink",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"environmentid\": \"local-test-env\",\n    \"tenantid\": \"local-test-tenant\",\n    \"action\": \"read\",\n    \"id\": \"5ZZcA\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{domain}}:{{shortlinksport}}/shortlink/:id",
+					"host": [
+						"{{domain}}"
+					],
+					"port": "{{shortlinksport}}",
+					"path": [
+						"shortlink",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "ltWJjN"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

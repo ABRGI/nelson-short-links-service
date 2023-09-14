@@ -17,7 +17,8 @@ These are dependencies that are expected to be pre-installed on the system befor
 ### Run commands
 #### Link manager
 The scripts run on an express server for testing or standalone machine deployment<br>
-Update the environment variables in package.json file before running the below command
+Update the environment variables in package.json file before running the below command<br>
+Import the "Short Links.postman_collection.json" into postman to test the link manager local deployment
 <code>npm run manager</code>
 
 #### Link redirection
