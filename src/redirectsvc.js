@@ -51,15 +51,30 @@ exports.handler = async (event) => {
             response.body = "Missing link id";
         }
         else {
+            var now = Date.now();
             var linkdataresponse = await getlink(event.rawPath.replace(/^\/+/, ''));
             if (linkdataresponse.Item) {
+                // Add a log that the link was clicked
+                const dynamoupdateresponse = await dynamoclient.updateItem({
+                    TableName: process.env.LINKS_TABLE,
+                    ReturnConsumedCapacity: "NONE",
+                    Key: marshall({ id: event.rawPath.replace(/^\/+/, '') }),
+                    UpdateExpression: "SET logs.#logdate=:logdata",
+                    ExpressionAttributeNames: {
+                        '#logdate': now.toString()
+                    },
+                    ExpressionAttributeValues: {
+                        ':logdata': { L: marshall(['Link accessed', event.headers['user-agent']]) }
+                    }
+                });
+
+                // Continue with link redirect
                 var linkdata = unmarshall(linkdataresponse.Item);
                 if (linkdata.deleteddate) {
                     response.statusCode = 403;
                     response.body = "Link already deleted";
                 }
                 else {
-                    var now = Date.now();
                     var domain = event.headers['nelson-host'] || null;
                     var enddate = (((domain != null && linkdata.aliases[domain]) ? linkdata.aliases[domain].enddate : null) || linkdata.enddate) || now;
                     var startdate = ((domain != null && linkdata.aliases[domain]) ? linkdata.aliases[domain].startdate : null) || linkdata.startdate || now;
