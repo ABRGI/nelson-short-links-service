@@ -10,14 +10,14 @@ phases:
       - echo Create new folder for link manager
       - mkdir linkmanager
       - echo Move link manager script to folder
-      - mv linkmanager.js linkmanager/linkmanager.js
-      - cd linkmanager
+      - mv ./src/linkmanager.js linkmanager/linkmanager.js
       - echo Pre build phase completed on `date`
   build:
     commands:
       - echo Build started on `date`
-      - echo Install npm dependencies in new folder
-      - npm install
+      - cd linkmanager
+      - echo Install short link dependencies for link manager
+      - npm install short-unique-id
       - echo Delete package lock and package json files
       - rm package-lock.json
       - rm package.json
