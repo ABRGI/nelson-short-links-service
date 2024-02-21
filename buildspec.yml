@@ -30,6 +30,6 @@ artifacts:
     - redirectsvc.js
     - error403.html
     - error404.html
-    - linkmanagerdeploy.zip
+    - ../linkmanagerdeploy.zip
   discard-paths: yes
   base-directory: src
