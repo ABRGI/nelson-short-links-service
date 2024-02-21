@@ -19,8 +19,6 @@ phases:
       - echo Install short link dependencies for link manager
       - npm install short-unique-id
       - echo Delete package lock and package json files
-      - rm package-lock.json
-      - rm package.json
       - echo Create zip archive
       - zip -r ../linkmanagerdeploy.zip .
       - echo completed finished on `date`
