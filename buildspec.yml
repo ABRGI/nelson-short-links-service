@@ -28,8 +28,11 @@ phases:
     commands:
       - echo No post build commands required
 artifacts:
+  name: $env-short-links-service
   files:
-    - ./src/recirectsvc.js
-    - ./src/error403.html
-    - ./src/error404.html
-    - ./src/linkmanagerdeploy.zip
+    - recirectsvc.js
+    - error403.html
+    - error404.html
+    - linkmanagerdeploy.zip
+  discard-paths: yes
+  base-directory: src
