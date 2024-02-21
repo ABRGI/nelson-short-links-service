@@ -1,0 +1,35 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+  pre-build:
+    commands:
+      - echo Pre build phase started on `date`
+      - echo Create new folder for link manager
+      - mkdir linkmanager
+      - echo Move link manager script to folder
+      - mv linkmanager.js linkmanager/linkmanager.js
+      - cd linkmanager
+      - echo Pre build phase completed on `date`
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Install npm dependencies in new folder
+      - npm install
+      - echo Delete package lock and package json files
+      - rm package-lock.json
+      - rm package.json
+      - echo Create zip archive
+      - zip -r ../linkmanagerdeploy.zip .
+      - echo completed finished on `date`
+  post-build:
+    commands:
+      - echo No post build commands required
+artifacts:
+  files:
+    - ./src/recirectsvc.js
+    - ./src/error403.html
+    - ./src/error404.html
+    - ./src/linkmanagerdeploy.zip

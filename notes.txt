@@ -1,0 +1,5 @@
+Helper code and scripts
+
+Invoke lambda from SAAS deployment - https://test4.omenahotels.com/api/invoke-lambda?accessKey=AXXXXXXXXXXXXXXXXXXXX&secretKey=XXXXXXXXXX&region=eu-central-1&lambdaName=TestShortLinksManager&payload=%7B%22key1%22:%22value%22,%22key2%22:%22value2%22%7D
+
+Make sure that the payload is url enoded if SAAS isn't doing it.
