@@ -4,7 +4,7 @@ phases:
   install:
     runtime-versions:
       nodejs: 18
-  pre-build:
+  pre_build:
     commands:
       - echo Pre build phase started on `date`
       - echo Create new folder for link manager
@@ -24,7 +24,7 @@ phases:
       - echo Create zip archive
       - zip -r ../linkmanagerdeploy.zip .
       - echo completed finished on `date`
-  post-build:
+  post_build:
     commands:
       - echo No post build commands required
 artifacts:
