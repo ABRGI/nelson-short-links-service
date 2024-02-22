@@ -36,8 +36,8 @@ phases:
       - echo Publish version to lambda for redirect service
       - aws lambda update-function-code --function-name $SHORT_LINKS_REDIRECT_SERVICE_FUNCTION_NAME --zip-file fileb://./redirectsvcdeploy.zip --publish
       - echo Returning to build folder to deploy error pages to CloudFront
-      - echo $PWD
-      - cd $PWD/src
+      - echo $CODEBUILD_SRC_DIR
+      - cd $CODEBUILD_SRC_DIR/src
       - echo Copying error pages to S3
       - aws s3 cp . s3://$SHORT_LINKS_ERROR_PAGES_BUCKET_NAME/ --recursive
       - echo Lambda versions publishing completed on `date`
