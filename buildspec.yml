@@ -7,28 +7,31 @@ phases:
   pre_build:
     commands:
       - echo Pre build phase started on `date`
-      - echo Create new folder for link manager
-      - mkdir linkmanager
-      - echo Move link manager script to folder
-      - mv ./src/linkmanager.js linkmanager/linkmanager.js
+      - echo Move link manager script to folder as index.js
+      - mkdir /tmp/linkmanager
+      - mv ./src/linkmanager.js /tmp/linkmanager/index.js
+      - echo Move redirect service to folder as index.js
+      - mkdir /tmp/redirectsvc
+      - mv ./src/redirectsvc.js /tmp/redirectsvc/index.js
       - echo Pre build phase completed on `date`
   build:
     commands:
       - echo Build started on `date`
       - echo Install short link dependencies for link manager
-      - cd linkmanager
-      - npm install short-unique-id
+      - cd /tmp/linkmanager
+      - npm install short-unique-id@4.4.4
       - echo Create zip archive for link manager
-      - zip -r ../linkmanagerdeploy.zip .
+      - zip -r /tmp/linkmanagerdeploy.zip .
       - echo Create zip archive for redirect service
-      - cd ../src
-      - zip -r ../redirectsvcdeploy.zip redirectsvc.js
+      - cd /tmp/redirectsvc
+      - zip -r /tmp/redirectsvcdeploy.zip .
       - echo Build completed `date`
   post_build:
     commands:
       - echo Lambda versions publishing started on `date`
       - cd ..
       - echo Publish version to lambda for link manager
+      - cd /tmp
       - aws lambda update-function-code --function-name $env'ShortLinksManager' --zip-file fileb://./linkmanagerdeploy.zip --publish
       - echo Publish version to lambda for redirect service
       - aws lambda update-function-code --function-name $env'ShortLinksRedirectService' --zip-file fileb://./redirectsvcdeploy.zip --publish
