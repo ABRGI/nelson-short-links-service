@@ -15,21 +15,21 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - cd linkmanager
       - echo Install short link dependencies for link manager
+      - cd linkmanager
       - npm install short-unique-id
-      - echo Create zip archive
+      - echo Create zip archive for link manager
       - zip -r ../linkmanagerdeploy.zip .
-      - echo completed finished on `date`
+      - echo Create zip archive for redirect service
+      - cd ../src
+      - zip -r ../redirectsvcdeploy.zip redirectsvc.js
+      - echo Build completed `date`
   post_build:
     commands:
-      - echo No post build commands required
-artifacts:
-  name: $env-short-links-service
-  files:
-    - redirectsvc.js
-    - error403.html
-    - error404.html
-    - ../linkmanagerdeploy.zip
-  discard-paths: yes
-  base-directory: src
+      - echo Lambda versions publishing started on `date`
+      - cd ..
+      - echo Publish version to lambda for link manager
+      - aws lambda update-function-code --function-name $env'ShortLinksManager' --zip-file fileb://./linkmanagerdeploy.zip --publish
+      - echo Publish version to lambda for redirect service
+      - aws lambda update-function-code --function-name $env'ShortLinksRedirectService' --zip-file fileb://./redirectsvcdeploy.zip --publish
+      - echo Lambda versions publishing completed on `date`
