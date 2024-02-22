@@ -7,8 +7,6 @@ phases:
   pre_build:
     commands:
       - echo Pre build phase started on `date`
-      - buildpath=`pwd`
-      - echo Build path $buildpath
       - echo Move link manager script to folder as index.js
       - mkdir /tmp/linkmanager
       - mv ./src/linkmanager.js /tmp/linkmanager/index.js
@@ -34,12 +32,12 @@ phases:
       - cd ..
       - echo Publish version to lambda for link manager
       - cd /tmp
-      - aws lambda update-function-code --function-name $shortlinksmanagerfunction --zip-file fileb://./linkmanagerdeploy.zip --publish
+      - aws lambda update-function-code --function-name $SHORT_LINKS_MANAGER_FUNCTION_NAME --zip-file fileb://./linkmanagerdeploy.zip --publish
       - echo Publish version to lambda for redirect service
-      - aws lambda update-function-code --function-name $shortlinksredirectfunction --zip-file fileb://./redirectsvcdeploy.zip --publish
+      - aws lambda update-function-code --function-name $SHORT_LINKS_REDIRECT_SERVICE_FUNCTION_NAME --zip-file fileb://./redirectsvcdeploy.zip --publish
       - echo Returning to build folder to deploy error pages to CloudFront
-      - echo $buildpath
-      - cd $buildpath/src
+      - echo $PWD
+      - cd $PWD/src
       - echo Copying error pages to S3
-      - aws s3 cp . s3://$shortlinkserrorpagesbucket/ --recursive
+      - aws s3 cp . s3://$SHORT_LINKS_ERROR_PAGES_BUCKET_NAME/ --recursive
       - echo Lambda versions publishing completed on `date`
