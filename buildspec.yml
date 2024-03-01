@@ -39,5 +39,5 @@ phases:
       - echo $CODEBUILD_SRC_DIR
       - cd $CODEBUILD_SRC_DIR/src
       - echo Copying error pages to S3
-      - aws s3 cp . s3://$ERROR_PAGES_BUCKET_NAME/ --recursive --delete
+      - aws s3 sync . s3://$ERROR_PAGES_BUCKET_NAME/ --delete
       - echo Lambda versions publishing completed on `date`
