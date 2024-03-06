@@ -28,7 +28,7 @@ phases:
       - echo Build completed `date`
   post_build:
     commands:
-      - echo Lambda versions publishing started on `date`
+      - echo Lambda deployment started on `date`
       - cd ..
       - echo Publish version to lambda for link manager
       - cd /tmp
@@ -40,4 +40,4 @@ phases:
       - cd $CODEBUILD_SRC_DIR/src
       - echo Copying error pages to S3
       - aws s3 sync . s3://$ERROR_PAGES_BUCKET_NAME/ --delete
-      - echo Lambda versions publishing completed on `date`
+      - echo Lambda deployment completed on `date`
