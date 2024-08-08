@@ -37,6 +37,8 @@ Update the environment variables in package.json for the local script if any cha
 
 Alternately, to debug the code on vscode, a vs launch.json has been included. Update the AWS credentials and any other environment variables as required to use this.
 
+To run the process in the background, install dependencies using ```npm i``` and then run ```bash run.sh```. To kill the services run ```bash kill.sh```. Use sudo if required. On linux machines, the lsof command doesn't recognise some ports if run as non-sudo user
+
 ## Lambda deployment instructions
 redirectsvc can directly be deployed to lambda since it doesn't have any non-aws library dependency. This instruction is for link manager which has external dependency
 - Create a new folder called link manager

@@ -11,21 +11,21 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "runtimeExecutable": "/Users/baynes/.nvm/versions/node/v18.17.1/bin/nodemon",
+            "runtimeExecutable": "/usr/local/bin/nodemon",
             "program": "${workspaceFolder}/index_manager.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ],
             "env": {
-                "PORT": "8002",
+                "PORT": "4006",
                 "LOCAL": "true",
                 "ENV_REGION": "eu-central-1",
                 "LINKS_TABLE": "Test-nelson-shortlinks",
                 "TENANT_LINKS_TABLE": "Test-nelson-tenant-shortlinks",
                 "ID_LENGTH": "5",
                 "INCLUDE_TIME_STAMP": "false",
-                "ACCESSKEY": "{{AWS Access Key}}",
-                "SECRETKEY": "{{AWS Secret Key}}"
+                "ACCESSKEY": "{AWS ACCESS KEY}",
+                "SECRETKEY": "{AWS SECRET KEY}"
             }
         },
         {
@@ -35,19 +35,25 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "runtimeExecutable": "/Users/baynes/.nvm/versions/node/v18.17.1/bin/nodemon",
+            "runtimeExecutable": "/usr/local/bin/nodemon",
             "program": "${workspaceFolder}/index_redirect.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ],
             "env": {
-                "PORT": "80",
+                "PORT": "4007",
                 "LOCAL": "true",
                 "ENV_REGION": "eu-central-1",
                 "LINKS_TABLE": "Test-nelson-shortlinks",
-                "ACCESSKEY": "{{AWS Access Key}}",
-                "SECRETKEY": "{{AWS Secret Key}}"
+                "ACCESSKEY": "{AWS ACCESS KEY}",
+                "SECRETKEY": "{AWS SECRET KEY}"
             }
         }
-    ]
+    ],
+    "compounds": [
+      {
+          "name": "short-links: All",
+          "configurations": ["Manager", "Redirect"]
+      }
+  ]
 }
