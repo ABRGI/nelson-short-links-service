@@ -64,7 +64,9 @@ exports.handler = async (event) => {
                         '#logdate': now.toString()
                     },
                     ExpressionAttributeValues: {
-                        ':logdata': { L: marshall(['Link accessed', event.headers['user-agent']]) }
+                        ':logdata': { L: marshall(['Link accessed', event.headers['user-agent'] || 'undefined-user-agent'], {
+                            removeUndefinedValues: true
+                        }) }
                     }
                 });
 
